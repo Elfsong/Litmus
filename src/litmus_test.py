@@ -11,6 +11,7 @@ import requests
 import textwrap
 from tqdm import tqdm
 from typing import Any
+from datasets import Dataset
 from tabulate import tabulate
 from datasets import load_dataset
 from multiprocessing.dummy import Pool as ThreadPool
@@ -32,6 +33,7 @@ class VenusLitmusTest(LitmusTest):
         self.venus_dict = {int(instance['question_id']): instance for instance in self.venus_dataset}
 
     def run_distribution(self):
+        distribution_data = list()
         for index, instance in enumerate(self.leetcode_dataset):
             problem_id = instance['problem_id']
             print(f"[+] Processing Problem [{problem_id}]...")
@@ -74,10 +76,8 @@ class VenusLitmusTest(LitmusTest):
                         execution_results.append(result)
                         pbar.update(1)
 
-            # Prepare the table header
+            # 6. Display the results
             headers = ["Passed", "Status", "Time (ms)", "Memory (kb)", "Integral (ms * kb)"]
-
-            # Build the table rows based on your results
             table = []
             for result in execution_results:
                 row = [
@@ -88,9 +88,38 @@ class VenusLitmusTest(LitmusTest):
                     f"{str(result['integral'])}"
                 ]
                 table.append(row)
-
-            # Print the formatted table
             print(tabulate(table, headers=headers, tablefmt="fancy_outline"))
+
+            # 7. Verify Solutions
+            verified_solutions = list()
+            for (solution, result) in zip(solution_list, execution_results):
+                verified_solutions.append({
+                    'code': solution, 
+                    'status': str(result['status']),
+                    'passed': bool(result['passed']),
+                    'time': float(result['time']),
+                    'memory': float(result['memory']),
+                    'integral': float(result['integral'])
+                })
+
+            data = {
+                "problem_id": int(instance['problem_id']),
+                "title": str(instance['title']),
+                "question_content": str(instance['question_content']),
+                "difficulty": str(instance['difficulty']),
+                "tags": list(instance['tags']),
+                "code_prompt": str(instance['code_prompt']['python3']),
+                "test_case_generator": str(instance['test_case_generator']),
+                "test_case_evaluator": str(instance['test_case_evaluator']),
+                "test_case_runners": str(instance['test_case_runners']["python3"]),
+                "test_cases": str(instance['test_cases']),
+                "solutions": verified_solutions
+            }
+            distribution_data.append(data)
+
+        # 8. Push Data to HF
+        new_leetcode_dataset = Dataset.from_list(distribution_data)
+        new_leetcode_dataset.push_to_hub(f"Elfsong/venus_{self.lang}_distribution", 'verified', private=True)
 
 
     def run_evaluation(self):
@@ -98,7 +127,11 @@ class VenusLitmusTest(LitmusTest):
 
 if __name__ == "__main__":
     venus_test = VenusLitmusTest(lang="python3", number_of_workers=16, case_multiply=64, max_test_packs=512, monolith_timeout=90)
+    # Get the distribution of each problem (it takes a long long time, be careful if you truely want to run it)
     venus_test.run_distribution()
+
+    # Run the evaluation for each model
+    # venus_test.run_evaluation()
     
     
     
