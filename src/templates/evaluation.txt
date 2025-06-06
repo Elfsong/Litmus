@@ -1,0 +1,70 @@
+import io
+import re
+import itertools
+import collections
+import heapq
+import bisect
+import string
+import sys
+import functools
+import math
+import copy
+import unittest
+
+from math import floor, ceil, factorial, sqrt, inf
+from sys import maxsize, stdin
+from bisect import bisect_left, bisect_right
+from itertools import permutations, zip_longest
+from heapq import heappush, heappop, heapify
+from collections import deque, defaultdict, OrderedDict
+from typing import List, Optional, Tuple
+from functools import lru_cache, cache
+
+
+# Placeholder for the running solution.
+def running_solution():
+{{ solution_code }}
+
+class TestSolution(unittest.TestCase):
+    def run_io_fun(self, input_data):
+        backup_stdin = sys.stdin
+        backup_stdout = sys.stdout
+        try:
+            sys.stdin = io.StringIO(input_data)
+            captured_output = io.StringIO()
+            sys.stdout = captured_output
+
+            running_solution()
+
+            captured_output.seek(0)
+            return captured_output.read()
+        finally:
+            sys.stdin = backup_stdin
+            sys.stdout = backup_stdout
+
+def make_test_function(input_data, expected):
+{{ test_case_evaluator }}
+
+    def test_method(self):
+        actual = self.run_io_fun(input_data)
+        passed = evaluate(expected, actual)
+        self.assertTrue(passed)
+
+    return test_method
+
+test_case_list = {{ test_case_list }}
+test_case_list = test_case_list * {{ case_multiply }}
+
+for i, case in enumerate(test_case_list, start=1):
+    test_name = f"test_case_{{i}}"
+    test_func = make_test_function(case['input'], case['output'])
+    setattr(TestSolution, test_name, test_func)
+
+if __name__ == '__main__':
+    result = unittest.main(verbosity=2, exit=False)
+    
+    # If all tests passed, print "Success".
+    if result.result.wasSuccessful():
+        print("Success")
+    else:
+        print("Failed")
