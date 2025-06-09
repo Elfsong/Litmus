@@ -1,9 +1,4 @@
-# Litmus
-Litmus is the public release of Afterburner Evaluation
-
-# 🚧 Work in Progress
-- Import Jinja as Template Engine
-- Baseline Distribution Construction
+# Afterburner - Evaluation
 
 # 🔮 How to evaluate the code efficiency?
 ```shell
